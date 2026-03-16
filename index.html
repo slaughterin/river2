@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@River</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        #content-wrapper {
+            text-align: center;
+            transition: opacity 1.5s ease-in-out;
+            opacity: 1;
+        }
+
+        .instruction {
+            font-size: 14px;
+            color: #444;
+            letter-spacing: 2px;
+        }
+
+        .main-text-container {
+            display: none;
+            font-size: 32px;
+            letter-spacing: 10px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        #cursor {
+            display: inline-block;
+            width: 12px;
+            height: 28px;
+            background-color: #fff;
+            margin-left: 5px;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* Style for the "nice try skid" text to appear in the corner */
+        .skid-text {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #fff;
+            z-index: 10000;
+        }
+    </style>
+
+    <script>
+        // --- ANTI-SKID PROTECTION ---
+        function triggerSkid() {
+            // Replaces the visual content but keeps the <body> and <audio> intact
+            const wrapper = document.getElementById('content-wrapper');
+            if (wrapper) {
+                wrapper.innerHTML = `<div class="skid-text">nice try skid</div>`;
+                wrapper.style.opacity = "1";
+                wrapper.style.display = "block";
+                // Force align to top left
+                wrapper.style.textAlign = "left";
+                document.body.style.alignItems = "flex-start";
+                document.body.style.justifyContent = "flex-start";
+            }
+        }
+
+        // Disable Right Click
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        // Block Shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (
+                e.keyCode === 123 || // F12
+                (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) || // I, J, C
+                (e.ctrlKey && [85, 83].includes(e.keyCode)) // U, S
+            ) {
+                e.preventDefault();
+                triggerSkid();
+            }
+        });
+    </script>
+</head>
+<body>
+
+    <audio id="bg-music" loop>
+        <source src="music.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="content-wrapper">
+        <div id="start-screen" class="instruction">[ click anywhere ]</div>
+        <div id="main-screen" class="main-text-container">
+            <span id="typewriter">River</span><span id="cursor"></span>
+        </div>
+    </div>
+
+    <script>
+        let hasEntered = false;
+
+        async function transitionPage() {
+            if (hasEntered) return;
+            hasEntered = true;
+
+            const wrapper = document.getElementById('content-wrapper');
+            const start = document.getElementById('start-screen');
+            const main = document.getElementById('main-screen');
+            const music = document.getElementById('bg-music');
+            const textElement = document.getElementById('typewriter');
+
+            // Start audio on user interaction
+            music.play().catch(() => {});
+
+            // Smooth fade out
+            wrapper.style.opacity = "0";
+
+            setTimeout(() => {
+                start.style.display = "none";
+                main.style.display = "block";
+                
+                // Smooth fade back in
+                wrapper.style.opacity = "1";
+
+                setTimeout(() => {
+                    startInfiniteLoop(textElement);
+                }, 1000);
+            }, 1500); 
+        }
+
+        document.addEventListener('click', transitionPage);
+
+        async function startInfiniteLoop(element) {
+            // Initial delete of "evil"
+            await typeEffect(element, "", true);
+            
+            while (true) {
+                await typeEffect(element, "River", false);
+                await sleep(3000); 
+                await typeEffect(element, "", true);
+                await sleep(500);
+            }
+        }
+
+        async function typeEffect(element, text, isDeleting) {
+            const currentText = element.innerText;
+            if (isDeleting) {
+                for (let i = currentText.length; i >= 0; i--) {
+                    element.innerText = currentText.substring(0, i);
+                    await sleep(80);
+                }
+            } else {
+                for (let i = 0; i <= text.length; i++) {
+                    element.innerText = text.substring(0, i);
+                    await sleep(150);
+                }
+            }
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+    </script>
+</body>
+</html>
